@@ -69,9 +69,6 @@ class GOV_Client(Client):
         if self.get("search", payload) and self.lr_status_code() == 200:
             response = self.lr_response(True)
             res = {}
-            print("\n\n")
-            print(response["results"])
-            print("\n\n")
             if len(response["results"]) > 0:
                 res["nom"] = response["results"][0]["dirigeants"][0]["nom"]
                 res["prenom"] = response["results"][0]["dirigeants"][0]["prenoms"]

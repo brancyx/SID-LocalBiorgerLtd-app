@@ -98,10 +98,10 @@ def index():
     return Response(response, status=200)  # Question2
 
 
-# /ingredients [POST, GET]
+# /ingredients [POST, GET, DELETE]
 
 
-@app.route('/ingredients', methods=['POST', 'GET'])
+@app.route('/ingredients', methods=['POST', 'GET', 'DELETE'])
 def set_ingredient_list():
     ip = request.remote_addr
     if request.method == "GET":
@@ -115,6 +115,10 @@ def set_ingredient_list():
         ingredient_list = LB_ltd.ingredients[ip]
         res = json.dumps(ingredient_list)
         response = f"<p>Ingredient list: {res}</p>"
+        return Response(response, status=200)
+    elif request.method == "DELETE":
+        LB_ltd.ingredients[ip] = []
+        response = f"<p>Delete successful</p>"
         return Response(response, status=200)
 
 # /ingredients/<ingred> POST
@@ -135,7 +139,7 @@ def add_ingredients(ingred):
     return resp
 
 
-# Route de location
+# /location ['POST', 'GET']
 
 @app.route('/location', methods=['POST', 'GET'])
 def location():
@@ -162,11 +166,11 @@ def get_producers():
     res = LB_ltd.get_producers("69621", "Pommes de terre")
     return res
 
-
-# /ingredients DELETE
 # /ingredients/<ingred> DELETE
 # /declare/<ip> POST
 # Liste les propriétaires associés à l'adresse IP qui interroge la ressource
+
+
 @app.route('/owners', methods=['GET'])
 def list_owners():
     ip = request.remote_addr

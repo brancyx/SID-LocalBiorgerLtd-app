@@ -67,6 +67,25 @@ class Client:
             res = False
         return res
 
+    # issues an http get request
+    def delete(self, route, protocol=None):
+        res = True
+        try:
+            # Stores in __r__ the response to the query
+            self.__r__ = r.delete(self.make_url(route, protocol))
+            # Deletes the last error (if an error is raised this is not executed)
+            self.__error__ = None
+        # possible errors
+        except HTTPError as http_err:
+            self.__error__ = f'HTTP error occurred: {http_err}'
+            self.__r__ = None
+            res = False
+        except Exception as err:
+            self.__error__ = f'Other error occurred: {err}'
+            self.__r__ = None
+            res = False
+        return res
+
     # returns the last response to a succesful query
     def lr(self):
         return self.__r__

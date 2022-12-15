@@ -50,10 +50,21 @@ class ClientTest(Client):
         else:
             print(self.lr_error())
 
+    def test_route_delete_all_ingredients(self):
+        if self.delete(f"ingredients"):
+            print(self.lr_status_code())
+            print(self.lr_headers().get("Content-Type"))
+            print(self.lr_response().text)
+        else:
+            print(self.lr_error())
+
 
 if __name__ == "__main__":
     c = ClientTest(port=5050)
-    c.test_route_producers()
     # c.test_route_post_ingredients()
     # c.test_route_get_ingredients()
-    # c.test_route_add_ingredients("Lemon")
+    c.test_route_add_ingredients("Lemon")
+    c.test_route_add_ingredients("Banane")
+    c.test_route_delete_all_ingredients()
+    c.test_route_get_ingredients()
+    # c.test_route_producers()
