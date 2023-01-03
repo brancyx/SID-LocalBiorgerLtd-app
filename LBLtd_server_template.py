@@ -14,7 +14,7 @@ class LocalBiorger:
         self.owners = {}
         self.owners["127.0.0.1"] = ["test1", "test2", "test3"]  # question4
         self.ingredients = {}
-        self.ingredients["127.0.0.1"] = ["Pommes de terre", "Pain frais"]
+        # self.ingredients["127.0.0.1"] = []  # ["Pommes de terre", "Pain frais"]
         self.location = {}
         self.location["127.0.0.1"] = {
             "city": "Villeurbane", "street": "Einstein Avenue"}
@@ -23,6 +23,8 @@ class LocalBiorger:
     def check_ip(self, client_ip):
         if client_ip not in self.owners.keys():
             self.owners[client_ip] = []
+        if client_ip not in self.ingredients.keys():
+            self.ingredients[client_ip] = []
 
     # Renvoie les développeurs associés à l'adresse ip (en json ou non)
     def get_owners(self, ip, injson=False):
@@ -81,6 +83,13 @@ class LocalBiorger:
 
         return producer_list
 
+    def del_ingred(self, ip, ingred):
+        res = False
+        if ingred in self.ingredients[ip]:
+            self.ingredients[ip].remove(ingred)
+            res = self.ingredients[ip]
+        return res
+
 
 # On crée le serveur
 app = Flask(__name__)
@@ -104,6 +113,7 @@ def index():
 @app.route('/ingredients', methods=['POST', 'GET', 'DELETE'])
 def set_ingredient_list():
     ip = request.remote_addr
+    LB_ltd.check_ip(ip)
     if request.method == "GET":
         ingredient_list = LB_ltd.ingredients[ip]
         res = json.dumps(ingredient_list)
@@ -167,6 +177,21 @@ def get_producers():
     return res
 
 # /ingredients/<ingred> DELETE
+
+
+@app.route('/ingredients/<ingred>', methods=['DELETE'])
+def delete_ingredients(ingred):
+    ip = request.remote_addr
+    LB_ltd.check_ip(ip)
+    r = LB_ltd.del_ingred(ip, ingred)
+    if r == False:
+        resp = Response(LB_ltd.get_ingredients(ip, True), status=304,
+                        mimetype="application/json")
+    else:
+        resp = Response(LB_ltd.get_ingredients(ip, True), status=200,
+                        mimetype="application/json")
+    return resp
+
 # /declare/<ip> POST
 # Liste les propriétaires associés à l'adresse IP qui interroge la ressource
 

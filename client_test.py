@@ -58,6 +58,14 @@ class ClientTest(Client):
         else:
             print(self.lr_error())
 
+    def test_route_del_ingredient(self, ingred):
+        if self.delete(f"ingredients/{ingred}"):
+            print(self.lr_status_code())
+            print(self.lr_headers().get("Content-Type"))
+            print(self.lr_response().text)
+        else:
+            print(self.lr_error())
+
 
 if __name__ == "__main__":
     c = ClientTest(port=5050)
@@ -65,6 +73,8 @@ if __name__ == "__main__":
     # c.test_route_get_ingredients()
     c.test_route_add_ingredients("Lemon")
     c.test_route_add_ingredients("Banane")
-    c.test_route_delete_all_ingredients()
+    # c.test_route_delete_all_ingredients()
     c.test_route_get_ingredients()
+    c.test_route_del_ingredient("Lemon")  # 200 del: ingred found
+    c.test_route_del_ingredient("Apple")  # 304 del: ingred not found
     # c.test_route_producers()
