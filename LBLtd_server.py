@@ -7,6 +7,7 @@ from flask import Response
 import json
 from SID_TD3_client import Client
 from OSM_client import OSM_Client, BIO_Client, IGN_Client, GOV_Client
+import time
 
 
 class LocalBiorger:
@@ -64,8 +65,10 @@ class LocalBiorger:
         raw_producer_list = bio.get_producer_list(
             coord["lat"], coord["lng"], ingredient)
 
-        closest_prod = raw_producer_list["producers"][0]
+        if raw_producer_list["producers"] == []:
+            return {"Error": "No producers found"}
 
+        closest_prod = raw_producer_list["producers"][0]
         info = {}
         user_coord = str(coord["lng"]) + "," + str(coord["lat"])
         prod_coord = str(closest_prod["adressesOperateurs"][0]["long"]) + \
@@ -131,18 +134,18 @@ def set_ingredient_list():
     if request.method == "GET":
         ingredient_list = LB_ltd.ingredients[ip]
         res = json.dumps(ingredient_list)
-        response = f"<p>Ingredient list: {res}</p>"
+        response = f"Ingredient list: {res}"
         return Response(res, status=200)
     elif request.method == "POST":
         if request.is_json:
             LB_ltd.ingredients[ip] = json.loads(request.get_json())
         ingredient_list = LB_ltd.ingredients[ip]
         res = json.dumps(ingredient_list)
-        response = f"<p>Ingredient list: {res}</p>"
+        response = f"Ingredient list: {res}"
         return Response(response, status=200)
     elif request.method == "DELETE":
         LB_ltd.ingredients[ip] = []
-        response = f"<p>Delete successful</p>"
+        response = f"Delete successful"
         return Response(response, status=200)
 
 # /ingredients/<ingred> POST
@@ -172,15 +175,14 @@ def location():
     if request.method == "GET":
         location = LB_ltd.location[ip]
         res = json.dumps(location)
-        response = f"<p>Location: {res}</p>"
+        response = f"Location: {res}"
         return Response(res, status=200)
     elif request.method == "POST":
         if request.is_json:
-            print("success")
             LB_ltd.location[ip] = json.loads(request.get_json())
         location = LB_ltd.location[ip]
         res = json.dumps(location)
-        response = f"<p>location: {res}</p>"
+        response = f"location: {res}"
         return Response(response, status=200)
 
 
@@ -189,25 +191,27 @@ def location():
 def get_producers():
     ip = request.remote_addr
     LB_ltd.check_ip(ip)
+    status = None
     if LB_ltd.location[ip] == {} and LB_ltd.ingredients[ip] == []:
         res = ["location", "ingredients"]
-        return Response(res, status=400)
+        status = 400
     elif LB_ltd.location[ip] == {}:
         res = ["location"]
-        return Response(res, status=400)
+        status = 400
     elif LB_ltd.ingredients[ip] == []:
         res = ["ingredients"]
-        return Response(res, status=400)
-    location = LB_ltd.location[ip]["street"] + \
-        "," + LB_ltd.location[ip]["city"]
-    ingredients = LB_ltd.ingredients[ip]
-    res = {}
-    for ing in ingredients:
-        producers = LB_ltd.get_closest_producer(location, ing)
-        res[ing] = producers
+        status = 400
+    else:
+        location = LB_ltd.location[ip]["street"] + \
+            "," + LB_ltd.location[ip]["city"]
+        ingredients = LB_ltd.ingredients[ip]
+        res = {}
+        for ing in ingredients:
+            producers = LB_ltd.get_closest_producer(location, ing)
+            res[ing] = producers
+        status = 200
     res = json.dumps(res)
-    print(res)
-    return Response(res, status=200)
+    return Response(res, status=status)
 
 # /ingredients/<ingred> DELETE
 
@@ -251,7 +255,6 @@ def add_owner(membre):
     else:
         resp = Response(LB_ltd.get_owners(ip, True), status=200,
                         mimetype="application/json")  # question4
-    print(resp)
     return resp
 
 

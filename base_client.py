@@ -44,7 +44,7 @@ class Client:
             res = False
         return res
 
-    # issues an http get request
+    # issues an http post request
     def post(self, route, data=None, protocol=None):
         res = True
         try:
@@ -67,7 +67,7 @@ class Client:
             res = False
         return res
 
-    # issues an http get request
+    # issues an http delete request
     def delete(self, route, protocol=None):
         res = True
         try:
@@ -112,45 +112,4 @@ class Client:
             res = self.__r__  # Change in question 7
             if json:
                 res = self.__r__.json()
-        return res
-
-    def lr_coordinates(self):
-        res = None
-        if self.__r__ != None:
-            print(self.__r__)
-            res = self.__r__.json()
-            return res[0]["lat"], res[0]["lon"]
-        return res
-
-    def lr_closest_producer(self, top=5):
-        res = None
-        if self.__r__ != None:
-            res = self.__r__.json()
-            producer_list = res["items"][:top]
-            updated_producer_list = []
-            for producer in producer_list:
-                coordinates = (producer["adressesOperateurs"][0]
-                               ["lat"], producer["adressesOperateurs"][0]["long"])
-                products = producer["productions"]
-                siret = producer["siret"]
-                producer_info = [siret, coordinates, products]
-                updated_producer_list.append(producer_info)
-            return updated_producer_list
-        return res
-
-    def lr_shortest_distance(self):
-        res = None
-        if self.__r__ != None:
-            res = self.__r__.json()
-            res = res["distance"]
-        return res
-
-    def lr_siret_company(self):
-        res = None
-        if self.__r__ != None:
-            res = self.__r__.json()
-            if len(res["results"]) > 0:  # Check if list is not empty
-                res = res["results"][0]
-            else:
-                res = None
         return res
