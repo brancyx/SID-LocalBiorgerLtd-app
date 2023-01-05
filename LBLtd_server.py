@@ -5,9 +5,8 @@ from flask import request  # to handle the different http requests
 # to reply (we could use jsonify as well but we handled it)
 from flask import Response
 import json
-from SID_TD3_client import Client
-from OSM_client import OSM_Client, BIO_Client, IGN_Client, GOV_Client
-import time
+from base_client import Client
+from client_services import OSM_Client, BIO_Client, IGN_Client, GOV_Client
 
 
 class LocalBiorger:
