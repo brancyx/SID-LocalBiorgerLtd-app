@@ -14,10 +14,7 @@ class LocalBiorger:
         self.owners = {}
         self.owners["127.0.0.1"] = ["test1", "test2", "test3"]  # question4
         self.ingredients = {}
-        # self.ingredients["127.0.0.1"] = []  # ["Pommes de terre", "Pain frais"]
         self.location = {}
-        self.location["127.0.0.1"] = {
-            "city": "Villeurbane", "street": "Einstein Avenue"}
 
     # Regarde si l'adresse ip est référencée, sinon crée une liste vide
     def check_ip(self, client_ip):
@@ -25,6 +22,8 @@ class LocalBiorger:
             self.owners[client_ip] = []
         if client_ip not in self.ingredients.keys():
             self.ingredients[client_ip] = []
+        if client_ip not in self.location.keys():
+            self.location[client_ip] = {}
 
     # Renvoie les développeurs associés à l'adresse ip (en json ou non)
     def get_owners(self, ip, injson=False):
@@ -56,7 +55,7 @@ class LocalBiorger:
             res = self.ingredients[ip]
         return res
 
-    def get_producers(self, location, ingredient):
+    def get_closest_producer(self, location, ingredient):
         osm = OSM_Client()
         bio = BIO_Client()
         ign = IGN_Client()
@@ -65,23 +64,38 @@ class LocalBiorger:
         raw_producer_list = bio.get_producer_list(
             coord["lat"], coord["lng"], ingredient)
 
-        producer_list = {}
-        producer_list["producers"] = []
+        closest_prod = raw_producer_list["producers"][0]
 
-        for producer in raw_producer_list["producers"]:
-            info = {}
-            user_coord = str(coord["lat"]) + "," + str(coord["lng"])
-            prod_coord = str(producer["adressesOperateurs"][0]["lat"]) + \
-                "," + str(producer["adressesOperateurs"][0]["long"])
-            distance = ign.get_driving_distance(user_coord, prod_coord)
-            leader_info = gov.get_company_info(producer["siret"])
-            info["coord"] = prod_coord
-            info["distance(km)"] = distance["distance"]
-            info["leader_nom"] = leader_info['nom']
-            info["leader_prenom"] = leader_info['prenom']
-            producer_list["producers"].append(info)
+        info = {}
+        user_coord = str(coord["lng"]) + "," + str(coord["lat"])
+        prod_coord = str(closest_prod["adressesOperateurs"][0]["long"]) + \
+            "," + str(closest_prod["adressesOperateurs"][0]["lat"])
+        distance = ign.get_driving_distance(user_coord, prod_coord)
+        enterprise_nom = closest_prod["denominationcourante"]
+        # leader_info = gov.get_company_info(closest_prod["siret"])
+        manager_nom = closest_prod["gerant"]
 
-        return producer_list
+        if enterprise_nom:
+            info["Enterprise"] = enterprise_nom
+        else:
+            info["Enterprise"] = "Unknown"
+
+        info["coord"] = str(closest_prod["adressesOperateurs"][0]["lat"]) + \
+            "," + str(closest_prod["adressesOperateurs"][0]["long"])
+        info["Distance(km)"] = distance["distance"]
+
+        if manager_nom:
+            info["Manager"] = manager_nom
+        else:
+            info["Manager"] = "Unknown"
+
+        # if leader_info:
+        #     info["leader_nom"] = leader_info['nom']
+        #     info["leader_prenom"] = leader_info['prenom']
+        # else:
+        #     info["leader_nom"] = "Unknown"
+        #     info["leader_prenom"] = "Unknown"
+        return info
 
     def del_ingred(self, ip, ingred):
         res = False
@@ -173,8 +187,27 @@ def location():
 # /producers GET
 @app.route('/producers', methods=['GET'])
 def get_producers():
-    res = LB_ltd.get_producers("69621", "Pommes de terre")
-    return res
+    ip = request.remote_addr
+    LB_ltd.check_ip(ip)
+    if LB_ltd.location[ip] == {} and LB_ltd.ingredients[ip] == []:
+        res = ["location", "ingredients"]
+        return Response(res, status=400)
+    elif LB_ltd.location[ip] == {}:
+        res = ["location"]
+        return Response(res, status=400)
+    elif LB_ltd.ingredients[ip] == []:
+        res = ["ingredients"]
+        return Response(res, status=400)
+    location = LB_ltd.location[ip]["street"] + \
+        "," + LB_ltd.location[ip]["city"]
+    ingredients = LB_ltd.ingredients[ip]
+    res = {}
+    for ing in ingredients:
+        producers = LB_ltd.get_closest_producer(location, ing)
+        res[ing] = producers
+    res = json.dumps(res)
+    print(res)
+    return Response(res, status=200)
 
 # /ingredients/<ingred> DELETE
 
@@ -192,7 +225,7 @@ def delete_ingredients(ingred):
                         mimetype="application/json")
     return resp
 
-# /declare/<ip> POST
+# /declare/<ip> POST #TODO
 # Liste les propriétaires associés à l'adresse IP qui interroge la ressource
 
 

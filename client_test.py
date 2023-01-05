@@ -17,7 +17,7 @@ class ClientTest(Client):
             else:
                 print(i, self.lr_status_code(), "Problem")
 
-    def test_route_producers(self):
+    def test_route_producers(self):  # TODO
         if self.get("producers"):
             print(self.lr_status_code())
             print(self.lr_headers().get("Content-Type"))
@@ -34,7 +34,7 @@ class ClientTest(Client):
             print(self.lr_error())
 
     def test_route_post_ingredients(self):
-        payload = ["Banane", "Orange"]
+        payload = ["Banane", "Orange"]  # TODO
         if self.post("ingredients", data=payload):
             print(self.lr_status_code())
             print(self.lr_headers().get("Content-Type"))
@@ -66,15 +66,33 @@ class ClientTest(Client):
         else:
             print(self.lr_error())
 
+    def test_route_add_location(self, city, street):
+        payload = {"city": city, "street": street}
+        if self.post(f"location", data=payload):
+            print(self.lr_status_code())
+            print(self.lr_headers().get("Content-Type"))
+            print(self.lr_response().text)
+        else:
+            print(self.lr_error())
+
+    def test_route_get_location(self):
+        if self.get(f"location"):
+            print(self.lr_status_code())
+            print(self.lr_headers().get("Content-Type"))
+            print(self.lr_response().text)
+        else:
+            print(self.lr_error())
+
 
 if __name__ == "__main__":
     c = ClientTest(port=5050)
-    # c.test_route_post_ingredients()
+    c.test_route_post_ingredients()
     # c.test_route_get_ingredients()
-    c.test_route_add_ingredients("Lemon")
-    c.test_route_add_ingredients("Banane")
+    c.test_route_add_ingredients("Pommes de terre")
+    # c.test_route_add_ingredients("Banane")
     # c.test_route_delete_all_ingredients()
-    c.test_route_get_ingredients()
-    c.test_route_del_ingredient("Lemon")  # 200 del: ingred found
-    c.test_route_del_ingredient("Apple")  # 304 del: ingred not found
-    # c.test_route_producers()
+    # c.test_route_get_ingredients()
+    # c.test_route_del_ingredient("Lemon")  # 200 del: ingred found
+    # c.test_route_del_ingredient("Apple")  # 304 del: ingred not found
+    c.test_route_add_location("Rennes", "5, allee Geoffroy de Pontblanc")
+    c.test_route_producers()

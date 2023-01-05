@@ -47,7 +47,7 @@ class IGN_Client(Client):
         res = False
         payload = {
             "resource": "bdtopo-osrm", "start": start_coord, "end": end_coord, "profile": "car",
-            "optimization": "fastest", "constraints": json.dumps({"constraintType": "banned", "key": "wayType", "operator": "=", "value": "autoroute"}),
+            "optimization": "shortest", "constraints": json.dumps({"constraintType": "banned", "key": "wayType", "operator": "=", "value": "autoroute"}),
             "getSteps": 'true', "getBbox": 'true', "distanceUnit": "kilometer", "timeUnit": "hour", "crs": "EPSG:4326"
         }
         if self.get("route", payload) and self.lr_status_code() == 200:
@@ -69,7 +69,7 @@ class GOV_Client(Client):
         if self.get("search", payload) and self.lr_status_code() == 200:
             response = self.lr_response(True)
             res = {}
-            if len(response["results"]) > 0:
+            if len(response["results"]) > 0 and response["results"][0]["dirigeants"] != []:
                 res["nom"] = response["results"][0]["dirigeants"][0]["nom"]
                 res["prenom"] = response["results"][0]["dirigeants"][0]["prenoms"]
             else:
